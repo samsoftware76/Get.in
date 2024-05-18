@@ -1,2 +1,2 @@
 # Get.in
-Get.in "Be part"
+Get.in
