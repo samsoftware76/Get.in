@@ -1,0 +1,78 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract EventCreator {
+    struct Event {
+        address organizer;
+        string title;
+        uint256 ticketPrice;
+        uint256 numTickets;
+    }
+    
+    mapping (address => Event[]) public events;
+    
+    function createEvent(string memory title, uint256 ticketPrice, uint256 numTickets) public {
+        Event memory newEvent = Event(msg.sender, title, ticketPrice, numTickets);
+        events[msg.sender].push(newEvent);
+    }
+    
+    function buyTicket(address eventAddress, uint256 numTickets) public payable {
+        require(events[eventAddress].length > 0, "Event does not exist");
+        Event storage eventData = events[eventAddress][0];
+        require(eventData.numTickets >= numTickets, "Not enough tickets available");
+        eventData.numTickets -= numTickets;
+        payable(eventData.organizer).transfer(eventData.ticketPrice * numTickets);
+    }
+}
+
+contract WorldIDContract {
+    mapping(address => bool) private verifiedIdentities;
+
+    function verifyIdentity(address _userAddress) public {
+        verifiedIdentities[_userAddress] = true;
+    }
+
+    function isIdentityVerified(address _userAddress) public view returns (bool) {
+        return verifiedIdentities[_userAddress];
+    }
+}
+
+contract WorldIDVerifier {
+    WorldIDContract private worldIDContract;
+
+    constructor(address _worldIDContractAddress) {
+        worldIDContract = WorldIDContract(_worldIDContractAddress);
+    }
+
+    function verifyWorldID(address userAddress) public {
+        bool isValid = worldIDContract.isIdentityVerified(userAddress);
+        require(isValid, "Invalid World ID");
+    }
+}
+
+contract DecentralizedWallet {
+    mapping (address => uint256) public wallets;
+    
+    function deposit(address organizer, uint256 amount) public {
+        wallets[organizer] += amount;
+    }
+    
+    function withdraw(address organizer, uint256 amount) public {
+        require(wallets[organizer] >= amount, "Insufficient funds");
+        wallets[organizer] -= amount;
+        payable(organizer).transfer(amount);
+    }
+}
+
+contract GetinPoints {
+    mapping (address => uint256) public points;
+    
+    function awardPoints(address user, uint256 numTickets) public {
+        points[user] += numTickets;
+    }
+    
+    function redeemPoints(address user, uint256 numTickets) public {
+        require(points[user] >= numTickets, "Insufficient points");
+        points[user] -= numTickets;
+    }
+}
